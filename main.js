@@ -47,7 +47,7 @@ async function train(data) {
 	const workerstr = getWorkerString();
 
 	for (let i=0; i<TRAIN_STEPS; ++i) {
-//		console.log(tf.memory());
+		document.getElementById('batch').innerHTML = 'Batch ' + (i + 1);
 		// Array of data to send to the workers.
 		const batchlist = []
 		for (let j=0; j<WORKER_COUNT; ++j) {
@@ -59,12 +59,20 @@ async function train(data) {
 		}
 		const model_weights = model.toArray();
 
+		// Number of workers complete so far.
+		let workers_done = 0;
+
 		// compute.for takes in an array of inputs, one element of it will
 		// be send to each worker, the code for the worker to execute, and
 		// any additional arguments to call the worker function with, which
 		// will be the same for all the workers.
 		const gen = compute.for([batchlist], workerstr, [model_weights]);
 		gen.requires('tensorflowdcp/tf.min.js');
+		gen.on('result', () => {
+			++workers_done;
+			document.getElementById('workers').innerHTML =
+			    'Batch progress: ' + workers_done + '/' + WORKER_COUNT;
+		});
 		gen.on('complete', () => console.log('Batch ' + (i + 1) + ' complete.'));
 		// Name that appears in the worker's browser.
 		gen._generator.public = {
@@ -108,6 +116,7 @@ async function test(model, data) {
 	const labels = model.classesFromLabel(batch.labels);
 	const accuracy = getAccuracy(predictions, labels);
 	console.log('accuracy = ' + accuracy);
+	document.getElementById('acc').innerHTML = 'Accuracy = ' + accuracy;
 //	ui.showTestResults(batch, predictions, labels);
 }
 
