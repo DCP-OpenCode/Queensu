@@ -2,4 +2,4 @@
 
 This is a demo for distributed machine learning on the DCP platform. It is intended to be used as a minimum working example to build more complicated projects on.
 
-To run, open index.html in Google Chrome.
+To run, open index.html in Google Chrome, Firefox, or Opera. This typically requires a web server to be run.
