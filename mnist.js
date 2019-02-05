@@ -193,7 +193,11 @@ export class MnistModel {
 			const axis = 1;
 			return this.compute(xs).argMax(axis);
 		});
-		return Array.from(pred.dataSync());
+
+		const ret = Array.from(pred.dataSync());
+		// Clean up the tensor.
+		pred.dispose();
+		return ret;
 	}
 
 	/**
@@ -208,7 +212,10 @@ export class MnistModel {
 		// Get the maximum index of each row of the 2D tensor.
 		const indices = labels.argMax(axis);
 
-		return Array.from(indices.dataSync());
+		const ret = Array.from(indices.dataSync());
+		// Clean up the tensor.
+		indices.dispose();
+		return ret;
 	}
 
 	/**

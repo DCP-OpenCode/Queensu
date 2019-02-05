@@ -13,6 +13,9 @@ import {TRAIN_STEPS, BATCH_SIZE, WORKER_COUNT} from './config.js';
 /* globals Generator, alert */
 //import Compute from '/compute.js' //eslint-disable-line
 
+// Turn this on for debugging GPU memory usage.
+const MEM_DEBUG = false;
+
 /**
  * Load in the images and corresponding labels.
  */
@@ -41,12 +44,23 @@ function getWorkerString() {
  * @returns {MnistModel} - The model that was trained.
  */
 async function train(data) {
+
+	if (MEM_DEBUG) {
+		console.log("Initial memory usage:");
+		console.log(tf.memory());
+	}
+
 	// Initialize our neural network model.
 	const model = new MnistModel();
 	// Get the code to send to the workers.
 	const workerstr = getWorkerString();
 
 	for (let i=0; i<TRAIN_STEPS; ++i) {
+		if (MEM_DEBUG) {
+			console.log("Batch " + (i + 1) + " memory usage:");
+			console.log(tf.memory());
+		}
+
 		document.getElementById('batch').innerHTML = 'Batch ' + (i + 1);
 		// Array of data to send to the workers.
 		const batchlist = []
@@ -82,6 +96,7 @@ async function train(data) {
 		// await the results:
 		// const res = await gen.exec(0.0001 * WORKER_COUNT);
 		const res = await gen.localExec();
+
 		// Turn the gradients back into tensors.
 		const tensorGrads = decodeGradients(res, model);
 		// Average the gradients between the workers.
@@ -117,6 +132,8 @@ async function test(model, data) {
 	const accuracy = getAccuracy(predictions, labels);
 	console.log('accuracy = ' + accuracy);
 	document.getElementById('acc').innerHTML = 'Accuracy = ' + accuracy;
+	// Clean up the batch.
+	tf.dispose(batch);
 //	ui.showTestResults(batch, predictions, labels);
 }
 
@@ -165,20 +182,22 @@ function averageGradients(grads) {
 
 	const avgGrads = {};
 	for (let key in grads[0]) {
-		let to_average = []
-		for (let grad of grads) {
-			// Add a 0th dimension to each gradient, and push it
-			// onto a list.
-			// Adding a 0th dimension is the same as taking an array
-			// and returning [array].
-			to_average.push(grad[key].expandDims(0));
-		}
-		// Concatenate all the expanded gradients into one big tensor, over
-		// axis 0. This is basically a tensor containing all the smaller
-		// tensors, where the [n]th entry would be grads[n][key].
-		let concatenatedTensor = tf.concat(to_average, 0);
-		// Take the mean along axis 0, averaging out the gradients.
-		avgGrads[key] = tf.mean(concatenatedTensor, 0);
+		avgGrads[key] = tf.tidy(() => {
+			let to_average = []
+			for (let grad of grads) {
+				// Add a 0th dimension to each gradient, and push it
+				// onto a list.
+				// Adding a 0th dimension is the same as taking an array
+				// and returning [array].
+				to_average.push(grad[key].expandDims(0));
+			}
+			// Concatenate all the expanded gradients into one big tensor, over
+			// axis 0. This is basically a tensor containing all the smaller
+			// tensors, where the [n]th entry would be grads[n][key].
+			let concatenatedTensor = tf.concat(to_average, 0);
+			// Take the mean along axis 0, averaging out the gradients.
+			return tf.mean(concatenatedTensor, 0);
+		});
 	}
 	return avgGrads;
 
