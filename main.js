@@ -9,7 +9,7 @@
 import {MnistData} from './data.js';
 import {MnistModel} from './mnist.js';
 import {worker} from './worker.js';
-import {TRAIN_STEPS, BATCH_SIZE, WORKER_COUNT} from './config.js';
+import {BATCH_SIZE, WORKER_COUNT} from './config.js';
 /* globals Generator, alert */
 //import Compute from '/compute.js' //eslint-disable-line
 
@@ -40,10 +40,11 @@ function getWorkerString() {
 /**
  * Train the model by sending out jobs over the network.
  *
- * @param {MnistData} - Object containing the data to train on.
+ * @param {MnistData} data - Object containing the data to train on.
+ * @param {MnistModel} [model] - The model to train (if one is not provided, a new model is created.)
  * @returns {MnistModel} - The model that was trained.
  */
-async function train(data) {
+async function train(data, model) {
 
 	if (MEM_DEBUG) {
 		console.log("Initial memory usage:");
@@ -51,17 +52,21 @@ async function train(data) {
 	}
 
 	// Initialize our neural network model.
-	const model = new MnistModel();
+	if (typeof model == "undefined") {
+		model = new MnistModel();
+	}
 	// Get the code to send to the workers.
 	const workerstr = getWorkerString();
 
-	for (let i=0; i<TRAIN_STEPS; ++i) {
+	for (; STEPS_DONE<TRAIN_STEPS; ++STEPS_DONE) {
+		const i = STEPS_DONE;
+
 		if (MEM_DEBUG) {
 			console.log("Batch " + (i + 1) + " memory usage:");
 			console.log(tf.memory());
 		}
 
-		document.getElementById('batch').innerHTML = 'Batch ' + (i + 1);
+		document.getElementById('batch').innerHTML = 'Batch ' + (i + 1) + ' of ' + TRAIN_STEPS;
 		// Array of data to send to the workers.
 		const batchlist = []
 		for (let j=0; j<WORKER_COUNT; ++j) {
@@ -86,6 +91,7 @@ async function train(data) {
 			++workers_done;
 			document.getElementById('workers').innerHTML =
 			    'Batch progress: ' + workers_done + '/' + WORKER_COUNT;
+			console.log(document.getElementById('workers').innerHTML);
 		});
 		gen.on('complete', () => console.log('Batch ' + (i + 1) + ' complete.'));
 		// Name that appears in the worker's browser.
@@ -109,7 +115,7 @@ async function train(data) {
 		tf.dispose(avgGrads);
 
 		// Test and print out accuracy...
-		test(model, data);
+		await test(model, data);
 	}
 	return model;
 }
@@ -203,10 +209,18 @@ function averageGradients(grads) {
 
 }
 
+let data;
+let model;
+let TRAIN_STEPS = 0;
+let STEPS_DONE = 0;
+
 async function go() {
+	TRAIN_STEPS += parseInt(document.getElementById('batches').value, 10);
 	await protocol.keychain.getKeystore();
-	const data = await load();
-	const model = await train(data);
+	if (typeof data == "undefined") {
+		data = await load();
+	}
+	model = await train(data, model);
 	test(model, data);
 }
 

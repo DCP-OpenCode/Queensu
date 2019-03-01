@@ -13,6 +13,4 @@
 export const WORKER_COUNT = 10;
 // Number of images to send each worker.
 export const BATCH_SIZE = 512;
-// Number of times to repeat the above.
-export const TRAIN_STEPS = 25;
 

@@ -1,13 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <style>
+  input[type="number"] {
+    width: 3em;
+  }
+  </style>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.14.1/dist/tf.min.js"></script>
   <script src="https://queensu.distributed.computer/etc/dcp-config.js"></script>
   <script src="https://queensu.distributed.computer/node_modules/dcp-client/dist/compute.min.js"></script>
   <script type=module src="./main.js"></script>
 </head>
 <body>
-  <button id="Train" onclick="go()">Train</button>
+  <button id="Train" onclick="go()">Queue Batches</button>
+  <p/>
+  <label for="batches">Number of batches:</>
+  <input type="number" id="batches" value="50">
   <p id="batch"></p>
   <p id="workers"></p>
   <p id="acc"></p>
