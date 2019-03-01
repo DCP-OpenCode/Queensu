@@ -17,8 +17,7 @@
  */
 export async function worker(input_data, weights_arr) {
 
-
-	tf = require('tf.min.js');
+	const tf = require('tfjs');
 
 	// MnistModel class gets inserted here.
 

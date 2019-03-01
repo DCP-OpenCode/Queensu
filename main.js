@@ -81,7 +81,7 @@ async function train(data) {
 		// any additional arguments to call the worker function with, which
 		// will be the same for all the workers.
 		const gen = compute.for([batchlist], workerstr, [model_weights]);
-		gen.requires('tensorflowdcp/tf.min.js');
+		gen.requires('tensorflowdcp/tfjs');
 		gen.on('result', () => {
 			++workers_done;
 			document.getElementById('workers').innerHTML =
@@ -204,6 +204,7 @@ function averageGradients(grads) {
 }
 
 async function go() {
+	await protocol.keychain.getKeystore();
 	const data = await load();
 	const model = await train(data);
 	test(model, data);
