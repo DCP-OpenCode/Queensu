@@ -25,6 +25,7 @@
       width: 100px;
       margin: 10px;
     }
+    
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js"></script>
   <script src="https://queensu.distributed.computer/etc/dcp-config.js"></script>
@@ -33,6 +34,9 @@
 </head>
 <body>
   <button id="Train" onclick="go()">Queue Batches</button>
+  <p/>
+  <label for="IS_LOCAL">Local Exec:</>
+  <input type="checkbox" id="IS_LOCAL">
   <p/>
   <label for="batches">Number of batches:</>
   <input type="number" id="batches" value="50">

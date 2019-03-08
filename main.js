@@ -17,9 +17,6 @@ import {BATCH_SIZE, WORKER_COUNT} from './config.js';
 // Turn this on for debugging GPU memory usage.
 const MEM_DEBUG = false;
 
-// Determines whether or not to use generator.localExec()
-const LOCAL = true;
-
 /**
  * Load in the images and corresponding labels.
  */
@@ -108,7 +105,7 @@ async function train(data, model) {
 		let res;
 
 		// await the results:
-		if (LOCAL) {
+		if (document.querySelector('#IS_LOCAL').checked) {
 			res = await gen.localExec();
 		} else {
 			gen._generator.capabilities = {gpu: true};
