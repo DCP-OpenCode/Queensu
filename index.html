@@ -2,11 +2,31 @@
 <html>
 <head>
   <style>
-  input[type="number"] {
-    width: 3em;
-  }
+    input[type="number"] {
+      width: 3em;
+    }
+
+    canvas {
+      width: 100px;
+    }
+    
+    .pred {
+      font-size: 30px;
+      width: 100px;
+    }
+    .pred-correct {
+      background-color: #00cf00;
+    }
+    .pred-incorrect {
+      background-color: red;
+    }
+    .pred-container {
+      display: inline-block;
+      width: 100px;
+      margin: 10px;
+    }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.14.1/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js"></script>
   <script src="https://queensu.distributed.computer/etc/dcp-config.js"></script>
   <script src="https://queensu.distributed.computer/node_modules/dcp-client/dist/compute.min.js"></script>
   <script type=module src="./main.js"></script>
@@ -19,5 +39,7 @@
   <p id="batch"></p>
   <p id="workers"></p>
   <p id="acc"></p>
+  <p>Test Results</p>
+  <div id="images"></div>
 </body>
 </html>

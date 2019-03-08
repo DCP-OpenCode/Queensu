@@ -9,12 +9,16 @@
 import {MnistData} from './data.js';
 import {MnistModel} from './mnist.js';
 import {worker} from './worker.js';
+import {showTestResults} from './ui.js';
 import {BATCH_SIZE, WORKER_COUNT} from './config.js';
 /* globals Generator, alert */
 //import Compute from '/compute.js' //eslint-disable-line
 
 // Turn this on for debugging GPU memory usage.
 const MEM_DEBUG = false;
+
+// Determines whether or not to use generator.localExec()
+const LOCAL = true;
 
 /**
  * Load in the images and corresponding labels.
@@ -87,21 +91,31 @@ async function train(data, model) {
 		// will be the same for all the workers.
 		const gen = compute.for([batchlist], workerstr, [model_weights]);
 		gen.requires('tensorflowdcp/tfjs');
-		gen.on('result', () => {
+		gen.on('result', (ev) => {
+			console.log({ev})
 			++workers_done;
 			document.getElementById('workers').innerHTML =
 			    'Batch progress: ' + workers_done + '/' + WORKER_COUNT;
 			console.log(document.getElementById('workers').innerHTML);
 		});
 		gen.on('complete', () => console.log('Batch ' + (i + 1) + ' complete.'));
+		gen.on('accepted', () => console.log("Generator id:", gen.id));
 		// Name that appears in the worker's browser.
 		gen._generator.public = {
 			name: 'MNIST Batch ' + (i + 1)
 		};
 
+		let res;
+
 		// await the results:
-		// const res = await gen.exec(0.0001 * WORKER_COUNT);
-		const res = await gen.localExec();
+		if (LOCAL) {
+			res = await gen.localExec();
+		} else {
+			gen._generator.capabilities = {gpu: true};
+			res = await gen.exec(0.0001 * WORKER_COUNT);
+		}
+
+		// debugger;
 
 		// Turn the gradients back into tensors.
 		const tensorGrads = decodeGradients(res, model);
@@ -138,11 +152,13 @@ async function test(model, data) {
 	const accuracy = getAccuracy(predictions, labels);
 	console.log('accuracy = ' + accuracy);
 	document.getElementById('acc').innerHTML = 'Accuracy = ' + accuracy;
+
+	// Display the test results as images with labels.
+	showTestResults(batch, predictions, labels);
+
 	// Clean up the batch.
 	tf.dispose(batch);
-//	ui.showTestResults(batch, predictions, labels);
 }
-
 
 /**
  * Compares predictions and labels to get the accuracy of the model.
